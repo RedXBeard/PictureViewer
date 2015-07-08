@@ -1,38 +1,101 @@
+#: import ListAdapter kivy.adapters.listadapter.ListAdapter
+#: import Factory kivy.factory.Factory
 #: import get_color_from_hex kivy.utils.get_color_from_hex
-#:import win kivy.core.window
+#: import win kivy.core.window
+
+<ImageSelectButton>
+    background_down: ""
+    background_disabled_down: ""
+    background_disabled_normal: ""
+    background_normal: ""
+    background_color: get_color_from_hex('F5F5F5')
+    group: 'images'
+    allow_no_selection: False
+
+<Pictures>
+    canvas.before:
+        Color:
+            rgba: get_color_from_hex('F5F5F5')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    columns: 1
+    rows: 3
+    size_hint: 1, None
+    height: '140px'
+
+    ImageSelectButton:
+        size_hint: None, None
+        width: '140px'
+        height: '140px'
+        on_parent: self._do_press() if root.is_selected else True
+        image_source: image_source
+
+        Image:
+            id: image_source
+            size_hint: None, None
+            y: self.parent.y + self.parent.height - 130
+            x: self.parent.x + 10
+            width: '120px'
+            height: '120px'
+            source: root.path
+
+
+<Label>
+    shorten: True
+    markup: True
+    shorten_from: 'right'
+    text_size: self.width, None
+    color: get_color_from_hex('000000')
 
 <PictureViewer>
-    orientation: 'vertical'
+    canvas.before:
+        Color:
+            rgba: get_color_from_hex('F5F5F5')
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
-    Label:
-        text: "Folders Image List"
-        size_hint_y: .2
+    columns: 3
+    rows: 1
+    spacing: '5px', '5px'
+    picture: picture
 
-    BoxLayout:
-        orientation: 'horizontal'
+    FileChooserListView:
+        size_hint: None, 1
+        width: '250px'
+        dirselect: True
+        show_hidden: True
+        filters: root.filters
+        path: root.path or "/Users/denizci"
+        color: get_color_from_hex('000000')
+        on_submit: root.select_source(self.selection)
 
-        BoxLayout:
-            orientation: 'vertical'
-            size_hint: .2, 1
+    GridLayout:
+        id: picture
+        columns: 1
+        rows: 2
+        spacing: '5px'
+        image_name: image_name
+        image_source: image_source
 
-            FileChooserListView:
-                dirselect: True
-                show_hidden: True
-                filters: ['*.jpeg', '*.jpg', '*.png']
-                on_submit: root.select_source(self.selection)
-                root_path: "/Users/denizci"
-                path: "/Users/denizci"
+        Image:
+            id: image_source
+            size_hint: None, None
+            width: self.parent.width
+            height: self.parent.height - 30
+            on_size: self.center = self.parent.center
+            source: root.picture_path
 
-        BoxLayout:
-            orientation: 'vertical'
-            size_hint: .8, 1
+        Label:
+            id: image_name
+            size_hint: 1, None
+            height: '25px'
+            halign: 'center'
+            text: root.picture_name
 
-            Image:
-                size_hint: 1, 1
-                on_size: self.center = win.Window.center
-                source: ''
-
-            Label:
-                size_hint: 1, None
-                height: '25px'
-                text: ''
+    ListView:
+        size_hint: None, 1
+        width: '150px'
+        adapter: ListAdapter(data=root.files, cls=Factory.Pictures, args_converter=root.picturesListed, selection_mode='single')
