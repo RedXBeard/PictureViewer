@@ -3,6 +3,16 @@
 #: import get_color_from_hex kivy.utils.get_color_from_hex
 #: import win kivy.core.window
 
+
+<Button>
+    background_down: ""
+    background_disabled_down: ""
+    background_disabled_normal: ""
+    background_normal: ""
+    background_color: get_color_from_hex('DDDDDD')
+    halign: 'center'
+
+
 <ImageSelectButton>
     background_down: ""
     background_disabled_down: ""
@@ -60,9 +70,13 @@
     columns: 3
     rows: 1
     spacing: '5px', '5px'
+
     picture: picture
+    photo: photo
+    file_chooser: file_chooser
 
     FileChooserListView:
+        id: file_chooser
         size_hint: None, 1
         width: '250px'
         dirselect: True
@@ -75,18 +89,27 @@
     GridLayout:
         id: picture
         columns: 1
-        rows: 2
+        rows: 3
         spacing: '5px'
         image_name: image_name
         image_source: image_source
 
-        Image:
-            id: image_source
+        Scatter:
+            id: photo
+            do_translation: False
+            do_scale: False
+            do_rotation: False
+            rotation: 0
             size_hint: None, None
+
             width: self.parent.width
-            height: self.parent.height - 30
-            on_size: self.center = self.parent.center
-            source: root.picture_path
+            height: self.parent.height - 60
+            Image:
+                id: image_source
+                size_hint: None, None
+                width: self.parent.width
+                height: self.parent.height - 10
+                source: root.picture_path
 
         Label:
             id: image_name
@@ -94,6 +117,25 @@
             height: '25px'
             halign: 'center'
             text: root.picture_name
+
+        GridLayout:
+            columns: 2
+            rows: 1
+            spacing: 10
+            padding: self.width/2 - 40, 0, self.width/2 - 40, 0
+            Button:
+                text: "[font=assets/fontawesome-webfont.ttf][/font]"
+                size_hint: None, 1
+                width: '35px'
+                height: '25px'
+                on_press: root.rotate(90)
+
+            Button:
+                text: "[font=assets/fontawesome-webfont.ttf][/font]"
+                size_hint: None, 1
+                width: '35px'
+                height: '25px'
+                on_press: root.rotate(-90)
 
     ListView:
         size_hint: None, 1

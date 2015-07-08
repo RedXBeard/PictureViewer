@@ -14,6 +14,8 @@ from kivy.properties import (
     ListProperty, NumericProperty
 )
 from kivy.utils import get_color_from_hex
+from kivy.animation import Animation
+
 
 FILE_EXTENSIONS = ['jpg', 'jpeg', 'png']
 FILE_EXTENSIONS.extend(map(lambda x: x.upper(), FILE_EXTENSIONS))
@@ -38,6 +40,7 @@ class ImageSelectButton(ToggleButton, ToggleButtonBehavior):
         picture_area = self.parent.parent.parent.parent.parent.picture
         picture_area.image_source.source = self.parent.path
         picture_area.image_name = self.parent.name
+        # TODO: Photo change operation should be handled on one side.
 
     def deselect(self, *args, **kwargs):
         pass
@@ -102,6 +105,8 @@ class PictureViewer(GridLayout):
             )
             self.files = self.files[display_range[0]:display_range[1]]
             self.selected_index_onlist = self.files.index(selected)
+            # TODO: filechooser also should be moved with keyboard interactions
+            # TODO: in each photo changing smooth animation should triggerred
         except IndexError:
             pass
 
@@ -118,6 +123,11 @@ class PictureViewer(GridLayout):
             'name': item.get('name', ''),
             'is_selected': item.setdefault('is_selected', False)
         }
+
+    def rotate(self, angle):
+        if self.picture.image_source.source:
+            anim = Animation(rotation=self.photo.rotation + angle, t='linear', duration=.5)
+            anim.start(self.photo)
 
     def key_pressed(self, *args, **kwargs):
         try:
