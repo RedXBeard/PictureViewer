@@ -2,7 +2,11 @@
 #: import Factory kivy.factory.Factory
 #: import get_color_from_hex kivy.utils.get_color_from_hex
 #: import win kivy.core.window
+#: import default_font_name main.DEFAULT_FONT
 
+
+<Label>
+    font_name: default_font_name
 
 <Button>
     background_down: ""
@@ -11,7 +15,6 @@
     background_normal: ""
     background_color: get_color_from_hex('DDDDDD')
     halign: 'center'
-
 
 <ImageSelectButton>
     background_down: ""
@@ -82,7 +85,7 @@
         dirselect: True
         show_hidden: True
         filters: root.filters
-        path: root.path or "/Users/denizci"
+        path: "/"
         color: get_color_from_hex('000000')
         on_submit: root.select_source(self.selection)
 
@@ -110,7 +113,7 @@
                 size_hint: 1,1
                 width: self.parent.width
                 height: self.parent.height - 10
-                source: root.picture_path
+                source: root.picture_path or "assets/pictureViewer.png"
 
         Label:
             id: image_name

@@ -17,18 +17,37 @@ from kivy.properties import (
 )
 from kivy.utils import get_color_from_hex
 from kivy.animation import Animation
+from os.path import expanduser, normpath, join, basename, sep
+from kivy.logger import Logger
+from weakref import ref
+from kivy.uix.filechooser import FileChooserListView
+from kivy.core.text import LabelBase
 
 
 FILE_EXTENSIONS = ['jpg', 'jpeg', 'png']
 FILE_EXTENSIONS.extend(map(lambda x: x.upper(), FILE_EXTENSIONS))
 
-FORWARD_KEY_CODES = [(275, 124), (100, 2)]
-BACKWARD_KEY_CODES = [(276, 123), (97, 0)]
+FORWARD_KEY_CODES = [(275, 124), (100, 2), (274, 125)]
+BACKWARD_KEY_CODES = [(276, 123), (97, 0), (273, 126)]
+
+KIVY_FONTS = [
+    {
+        "name": "FiraSans",
+        "fn_regular": "assets/fira-sans.regular.ttf"
+    },
+]
+
+for font in KIVY_FONTS:
+    LabelBase.register(**font)
+
+DEFAULT_FONT = "FiraSans"
 
 
 def get_dir(path):
     file_dir = os.path.dirname(path)
     return file_dir
+
+
 
 
 class ImageSelectButton(ToggleButton, ToggleButtonBehavior):
@@ -60,11 +79,6 @@ class Pictures(GridLayout):
     is_selected = BooleanProperty(False)
 
 
-class Picture(GridLayout):
-    path = StringProperty('')
-    name = StringProperty('')
-
-
 class PictureViewer(GridLayout):
     source = StringProperty("")
     files = ListProperty([])
@@ -82,7 +96,7 @@ class PictureViewer(GridLayout):
     def change_image_source(self, *args, **kwargs):
         selection = args[0]
         self.picture_path = selection
-        self.picture_name = selection.rsplit("/", 1)[0]
+        self.picture_name = selection.rsplit("/", 1)[1]
         anim = Animation(width=self.photo.width, t='linear', duration=.2)
         anim.start(self.picture.image_source)
 
@@ -91,14 +105,14 @@ class PictureViewer(GridLayout):
             file_dir = get_dir(selection)
             self.files = []
             if os.path.isfile(selection):
-                if self.picture.image_source.source:
+                if self.picture.image_source.source and self.picture.image_name.text:
                     anim = Animation(width=0, t='linear', duration=.2)
                     anim.fbind('on_complete', self.change_image_source, selection)
                     anim.start(self.picture.image_source)
                 else:
                     self.picture.image_source.width = 0
                     self.picture_path = selection
-                    self.picture_name = selection.rsplit("/", 1)[0]
+                    self.picture_name = selection.rsplit("/", 1)[1]
                     anim = Animation(width=self.photo.width, t='linear', duration=.2)
                     anim.start(self.picture.image_source)
             selected = {}
@@ -149,7 +163,7 @@ class PictureViewer(GridLayout):
             find_index.index(sorted(find_index)[0])]
 
     def rotate(self, angle):
-        if self.picture.image_source.source:
+        if self.picture.image_source.source and self.picture.image_name.text:
             anim = Animation(
                 rotation=self.photo.rotation + angle, t='linear', duration=.2)
             anim.fbind('on_complete', self.norm_picture, angle)
@@ -165,7 +179,19 @@ class PictureViewer(GridLayout):
                         self.selected_index_onlist + 1, len(self.files) - 1)
                 elif code in BACKWARD_KEY_CODES:
                     next_index = max(self.selected_index_onlist - 1, 0)
-                self.load_files(self.files[next_index]['path'])
+                if next_index != self.selected_index_onlist:
+                    self.load_files(self.files[next_index]['path'])
+        except IndexError:
+            pass
+
+    def set_path(self, *args):
+        try:
+            selected = get_dir(args[1])
+            if os.path.isdir(selected):
+                selected_dir = selected
+            else:
+                selected_dir = get_dir(selected)
+            self.file_chooser.path = selected_dir
         except IndexError:
             pass
 
@@ -183,12 +209,17 @@ class PictureViewerApp(App):
     def build(self):
         pictureviewer = PictureViewer(path=self.path)
         Window.bind(on_key_down=pictureviewer.key_pressed)
+        Window.bind(on_dropfile=pictureviewer.set_path)
         return pictureviewer
 
 if __name__ == '__main__':
+    import sys
+    path = "/"
+    if len(sys.argv) > 1:
+        path = sys.argv[1]
     Window.size = 1200, 700
     Window.borderless = False
     Config.set('kivy', 'exit_on_escape', 0)
     Config.set('kivy', 'desktop', 1)
     Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
-    PictureViewerApp().run()
+    PictureViewerApp(path=path).run()
