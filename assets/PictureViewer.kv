@@ -42,7 +42,7 @@
         on_parent: self._do_press() if root.is_selected else True
         image_source: image_source
 
-        Image:
+        AsyncImage:
             id: image_source
             size_hint: None, None
             y: self.parent.y + self.parent.height - 130
@@ -100,13 +100,14 @@
             do_scale: False
             do_rotation: False
             rotation: 0
+            total_rotation: 0
             size_hint: None, None
 
             width: self.parent.width
             height: self.parent.height - 60
-            Image:
+            AsyncImage:
                 id: image_source
-                size_hint: None, None
+                size_hint: 1,1
                 width: self.parent.width
                 height: self.parent.height - 10
                 source: root.picture_path

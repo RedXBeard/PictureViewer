@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 __version__ = '1.0.0'
 
 import os
@@ -37,10 +39,8 @@ class ImageSelectButton(ToggleButton, ToggleButtonBehavior):
         self.background_color = get_color_from_hex(self.selected[self.state])
 
     def select(self, *args, **kwargs):
-        picture_area = self.parent.parent.parent.parent.parent.picture
-        picture_area.image_source.source = self.parent.path
-        picture_area.image_name = self.parent.name
-        # TODO: Photo change operation should be handled on one side.
+        pictureviewer = self.parent.parent.parent.parent.parent
+        pictureviewer.load_files(self.parent.path)
 
     def deselect(self, *args, **kwargs):
         pass
@@ -79,13 +79,28 @@ class PictureViewer(GridLayout):
             self.path = kwargs.pop('path')
         super(PictureViewer, self).__init__(*args, **kwargs)
 
+    def change_image_source(self, *args, **kwargs):
+        selection = args[0]
+        self.picture_path = selection
+        self.picture_name = selection.rsplit("/", 1)[0]
+        anim = Animation(width=self.photo.width, t='linear', duration=.2)
+        anim.start(self.picture.image_source)
+
     def load_files(self, selection):
         try:
             file_dir = get_dir(selection)
             self.files = []
             if os.path.isfile(selection):
-                self.picture_path = selection
-                self.picture_name = selection.rsplit("/", 1)[1]
+                if self.picture.image_source.source:
+                    anim = Animation(width=0, t='linear', duration=.2)
+                    anim.fbind('on_complete', self.change_image_source, selection)
+                    anim.start(self.picture.image_source)
+                else:
+                    self.picture.image_source.width = 0
+                    self.picture_path = selection
+                    self.picture_name = selection.rsplit("/", 1)[0]
+                    anim = Animation(width=self.photo.width, t='linear', duration=.2)
+                    anim.start(self.picture.image_source)
             selected = {}
             for ext in FILE_EXTENSIONS:
                 files = glob("%s/*.%s" % (file_dir, ext))
@@ -105,8 +120,8 @@ class PictureViewer(GridLayout):
             )
             self.files = self.files[display_range[0]:display_range[1]]
             self.selected_index_onlist = self.files.index(selected)
+            self.file_chooser.selection = [selection.rsplit("/", 1)[1], ]
             # TODO: filechooser also should be moved with keyboard interactions
-            # TODO: in each photo changing smooth animation should triggerred
         except IndexError:
             pass
 
@@ -124,9 +139,20 @@ class PictureViewer(GridLayout):
             'is_selected': item.setdefault('is_selected', False)
         }
 
+    def scale(self):
+        pass
+
+    def norm_picture(self, angle, anim, scatter):
+        rotations = [-270.0, -180.0, -90.0, 0.0, 90.0, 180.0, 270.0]
+        find_index = map(lambda x: abs(self.photo.rotation - x), rotations)
+        self.photo.rotation = rotations[
+            find_index.index(sorted(find_index)[0])]
+
     def rotate(self, angle):
         if self.picture.image_source.source:
-            anim = Animation(rotation=self.photo.rotation + angle, t='linear', duration=.5)
+            anim = Animation(
+                rotation=self.photo.rotation + angle, t='linear', duration=.2)
+            anim.fbind('on_complete', self.norm_picture, angle)
             anim.start(self.photo)
 
     def key_pressed(self, *args, **kwargs):
