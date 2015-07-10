@@ -13,7 +13,7 @@
     background_disabled_down: ""
     background_disabled_normal: ""
     background_normal: ""
-    background_color: get_color_from_hex('DDDDDD')
+    background_color: get_color_from_hex('F5F5F5')
     halign: 'center'
 
 <ImageSelectButton>
@@ -21,7 +21,6 @@
     background_disabled_down: ""
     background_disabled_normal: ""
     background_normal: ""
-    background_color: get_color_from_hex('F5F5F5')
     group: 'images'
     allow_no_selection: False
 
@@ -96,6 +95,7 @@
         spacing: '5px'
         image_name: image_name
         image_source: image_source
+        photo: photo
 
         Scatter:
             id: photo
@@ -126,13 +126,26 @@
             columns: 2
             rows: 1
             spacing: 10
-            padding: self.width/2 - 40, 0, self.width/2 - 40, 0
+            padding: self.width/2 - 65, 0, self.width/2 - 65, 0
             Button:
                 text: "[font=assets/fontawesome-webfont.ttf][/font]"
                 size_hint: None, 1
                 width: '35px'
                 height: '25px'
                 on_press: root.rotate(90)
+
+            Button:
+                text: ""
+                size_hint: None, 1
+                width: '40px'
+                height: '25px'
+                on_press: root.save()
+                Image:
+                    size_hint: 1,1
+                    width: self.parent.width
+                    height: self.parent.height -5
+                    pos: self.parent.x, self.parent.y + 2
+                    source: "assets/save_icon.png"
 
             Button:
                 text: "[font=assets/fontawesome-webfont.ttf][/font]"
@@ -144,4 +157,5 @@
     ListView:
         size_hint: None, 1
         width: '150px'
+        scrolling: True
         adapter: ListAdapter(data=root.files, cls=Factory.Pictures, args_converter=root.picturesListed, selection_mode='single')

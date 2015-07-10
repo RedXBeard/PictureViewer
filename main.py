@@ -51,7 +51,7 @@ def get_dir(path):
 
 
 class ImageSelectButton(ToggleButton, ToggleButtonBehavior):
-    selected = {'down': 'D6D6D6',
+    selected = {'down': 'DDDDDD',
                 'normal': 'F5F5F5'}
 
     def change_color(self):
@@ -70,6 +70,7 @@ class ImageSelectButton(ToggleButton, ToggleButtonBehavior):
         for button in buttons:
             if self != button:
                 button.state = 'normal'
+                button.is_select = False
             button.change_color()
 
 
@@ -129,7 +130,7 @@ class PictureViewer(GridLayout):
                         selected = tmp
             self.selected_index_onlist = self.files.index(selected)
             display_range = (
-                max(self.selected_index_onlist - 5, 0),
+                max(self.selected_index_onlist - 4, 0),
                 min(self.selected_index_onlist + 5, len(self.files))
             )
             self.files = self.files[display_range[0]:display_range[1]]
@@ -152,6 +153,9 @@ class PictureViewer(GridLayout):
             'name': item.get('name', ''),
             'is_selected': item.setdefault('is_selected', False)
         }
+
+    def save(self):
+        print self.picture.photo.rotation
 
     def scale(self):
         pass
