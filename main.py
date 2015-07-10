@@ -3,6 +3,7 @@
 __version__ = '1.0.0'
 
 import os
+from PIL import Image
 from glob import glob
 from kivy.app import App
 from kivy.lang import Builder
@@ -12,9 +13,12 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.behaviors import ToggleButtonBehavior
 from kivy.properties import (
-    StringProperty, BooleanProperty,
+    StringProperty, BooleanProperty, ObjectProperty,
     ListProperty, NumericProperty
 )
+from kivy.cache import Cache
+from kivy.adapters.listadapter import ListAdapter
+from kivy.factory import Factory
 from kivy.utils import get_color_from_hex
 from kivy.animation import Animation
 from os.path import expanduser, normpath, join, basename, sep
@@ -48,8 +52,6 @@ def get_dir(path):
     return file_dir
 
 
-
-
 class ImageSelectButton(ToggleButton, ToggleButtonBehavior):
     selected = {'down': 'DDDDDD',
                 'normal': 'F5F5F5'}
@@ -77,15 +79,15 @@ class ImageSelectButton(ToggleButton, ToggleButtonBehavior):
 class Pictures(GridLayout):
     path = StringProperty('')
     name = StringProperty('')
+    rotation = NumericProperty(0)
     is_selected = BooleanProperty(False)
 
 
 class PictureViewer(GridLayout):
     source = StringProperty("")
     files = ListProperty([])
-    picture_path = StringProperty("")
-    picture_name = StringProperty("")
     selected_index_onlist = NumericProperty(0)
+    selectedimage = Pictures()
 
     def __init__(self, *args, **kwargs):
         self.filters = map(lambda x: "*.%s" % x, FILE_EXTENSIONS)
@@ -96,8 +98,11 @@ class PictureViewer(GridLayout):
 
     def change_image_source(self, *args, **kwargs):
         selection = args[0]
-        self.picture_path = selection
-        self.picture_name = selection.rsplit("/", 1)[1]
+
+        self.selectedimage.path = selection
+        self.selectedimage.name = selection.rsplit("/", 1)[1]
+        self.selectedimage.rotation = 0
+
         anim = Animation(width=self.photo.width, t='linear', duration=.2)
         anim.start(self.picture.image_source)
 
@@ -106,16 +111,28 @@ class PictureViewer(GridLayout):
             file_dir = get_dir(selection)
             self.files = []
             if os.path.isfile(selection):
-                if self.picture.image_source.source and self.picture.image_name.text:
-                    anim = Animation(width=0, t='linear', duration=.2)
-                    anim.fbind('on_complete', self.change_image_source, selection)
-                    anim.start(self.picture.image_source)
+                if self.picture.image_source.source != selection:
+                    if self.picture.image_source.source and self.picture.image_name.text:
+                        anim = Animation(width=0, t='linear', duration=.2)
+                        anim.fbind('on_complete', self.change_image_source, selection)
+                        anim.start(self.picture.image_source)
+                    else:
+                        self.picture.image_source.width = 0
+
+                        self.selectedimage.path = selection
+                        self.selectedimage.name = selection.rsplit("/", 1)[1]
+                        self.selectedimage.rotation = 0
+
+                        anim = Animation(width=self.photo.width, t='linear', duration=.2)
+                        anim.start(self.picture.image_source)
                 else:
-                    self.picture.image_source.width = 0
-                    self.picture_path = selection
-                    self.picture_name = selection.rsplit("/", 1)[1]
-                    anim = Animation(width=self.photo.width, t='linear', duration=.2)
+                    self.selectedimage.path = selection
+                    self.selectedimage.name = selection.rsplit("/", 1)[1]
+                    self.selectedimage.rotation = 0
+
+                    anim = Animation(width=self.photo.width, t='out_back', duration=1)
                     anim.start(self.picture.image_source)
+
             selected = {}
             for ext in FILE_EXTENSIONS:
                 files = glob("%s/*.%s" % (file_dir, ext))
@@ -123,7 +140,8 @@ class PictureViewer(GridLayout):
                     tmp = {
                         'name': f.rsplit("/", 1)[1],
                         'path': f,
-                        'is_selected': selection == f and True or False
+                        'is_selected': selection == f and True or False,
+                        'rotation': 0
                     }
                     self.files.append(tmp)
                     if tmp['is_selected']:
@@ -135,7 +153,6 @@ class PictureViewer(GridLayout):
             )
             self.files = self.files[display_range[0]:display_range[1]]
             self.selected_index_onlist = self.files.index(selected)
-            self.file_chooser.selection = [selection.rsplit("/", 1)[1], ]
             # TODO: filechooser also should be moved with keyboard interactions
         except IndexError:
             pass
@@ -151,25 +168,51 @@ class PictureViewer(GridLayout):
         return {
             'path': item.get('path', ''),
             'name': item.get('name', ''),
+            'rotation': item.get('rotation', 0),
             'is_selected': item.setdefault('is_selected', False)
         }
 
-    def save(self):
-        print self.picture.photo.rotation
+    def reload_images(self):
+        for pic in self.list_view.children[0].children[0].children:
+            im = pic.image_source
+            im.reload()
+        im = self.picture.image_source
+        im.reload()
 
-    def scale(self):
-        pass
+    def save_img(self, *args, **kwargs):
+        rotation_dct = {
+            90: Image.ROTATE_90,
+            180: Image.ROTATE_180,
+            270: Image.ROTATE_270,
+        }
+        rotation = self.norm_picture(self.photo.rotation, None, None)
+        rotation = int(str(rotation).rsplit(".", 1)[0])
+        image_path = self.picture.image_source.source
+        if rotation > 0 and rotation in rotation_dct:
+            im = Image.open(image_path)
+            im = im.transpose(rotation_dct.get(rotation))
+            im.save(image_path, quality = 95)
+            Cache.remove("kv.loader", image_path)
+        self.load_files(image_path)
+        self.reload_images()
+
+    def save_anim(self, order='pre'):
+        anim = Animation(width=0, t='in_back', duration=1)
+        anim.bind(on_complete=self.save_img)
+        anim.start(self.picture.image_source)
 
     def norm_picture(self, angle, anim, scatter):
-        rotations = [-270.0, -180.0, -90.0, 0.0, 90.0, 180.0, 270.0]
-        find_index = map(lambda x: abs(self.photo.rotation - x), rotations)
-        self.photo.rotation = rotations[
+        rotations = [-270, -180, -90, 0, 90, 180, 270]
+        find_index = map(lambda x: abs(int(self.photo.rotation) - x), rotations)
+        self.selectedimage.rotation = rotations[
             find_index.index(sorted(find_index)[0])]
+        return self.photo.rotation
 
     def rotate(self, angle):
         if self.picture.image_source.source and self.picture.image_name.text:
             anim = Animation(
-                rotation=self.photo.rotation + angle, t='linear', duration=.2)
+                rotation=self.selectedimage.rotation + angle,
+                t='linear', duration=.2)
             anim.fbind('on_complete', self.norm_picture, angle)
             anim.start(self.photo)
 
