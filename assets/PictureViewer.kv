@@ -9,11 +9,11 @@
     font_name: default_font_name
 
 <Button>
-    background_down: ""
-    background_disabled_down: ""
-    background_disabled_normal: ""
-    background_normal: ""
-    background_color: get_color_from_hex('F5F5F5')
+    background_down: "assets/trans.png"
+    background_disabled_down: "assets/trans.png"
+    background_disabled_normal: "assets/trans.png"
+    background_normal: "assets/trans.png"
+    background_color: ''
     halign: 'center'
 
 <ImageSelectButton>
@@ -84,7 +84,7 @@
         dirselect: True
         show_hidden: True
         filters: root.filters
-        path: "/Users/denizci/Dropbox/"
+        path: "/"
         color: get_color_from_hex('000000')
         on_submit: root.select_source(self.selection)
 
@@ -92,7 +92,7 @@
         id: picture
         columns: 1
         rows: 3
-        spacing: '5px'
+        spacing: '0'
         image_name: image_name
         image_source: image_source
         photo: photo
@@ -116,6 +116,13 @@
                 source: root.selectedimage.path or "assets/pictureViewer.png"
 
         Label:
+            canvas.before:
+                Color:
+                    rgba: 0.96, 0.96, 0.96, .7
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
             id: image_name
             size_hint: 1, None
             height: '25px'
@@ -123,6 +130,13 @@
             text: root.selectedimage.name
 
         GridLayout:
+            canvas.before:
+                Color:
+                    rgba: 0.96, 0.96, 0.96, .7
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
             columns: 2
             rows: 1
             spacing: 10

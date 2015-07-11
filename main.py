@@ -196,10 +196,11 @@ class PictureViewer(GridLayout):
         self.load_files(image_path)
         self.reload_images()
 
-    def save_anim(self, order='pre'):
-        anim = Animation(width=0, t='in_back', duration=1)
-        anim.bind(on_complete=self.save_img)
-        anim.start(self.picture.image_source)
+    def save_anim(self):
+        if self.picture.image_source.source and self.picture.image_name.text:
+            anim = Animation(width=0, t='in_back', duration=1)
+            anim.bind(on_complete=self.save_img)
+            anim.start(self.picture.image_source)
 
     def norm_picture(self, angle, anim, scatter):
         rotations = [-270, -180, -90, 0, 90, 180, 270]
