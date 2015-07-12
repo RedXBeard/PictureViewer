@@ -105,7 +105,6 @@ class PictureViewer(GridLayout):
         super(PictureViewer, self).__init__(*args, **kwargs)
 
     def change_item_colors(self, *args, **kwargs):
-        print "???"
         for item in self.file_chooser._items:
             item.color_selected = get_color_from_hex('B3B3B3')
 
@@ -403,7 +402,7 @@ class PictureViewerApp(App):
 
 if __name__ == '__main__':
     import sys
-    path = "/Users/denizci/Dropbox/"
+    path = "/"
     # Tried to take selected photo on start.
     if len(sys.argv) > 1:
         path = sys.argv[1]
