@@ -33,6 +33,7 @@ FILE_EXTENSIONS.extend(map(lambda x: x.upper(), FILE_EXTENSIONS))
 
 FORWARD_KEY_CODES = [(275, 124), (100, 2), (274, 125)]
 BACKWARD_KEY_CODES = [(276, 123), (97, 0), (273, 126)]
+FULLSCREEN_KEY_CODES = [(102, 3)]
 
 KIVY_FONTS = [
     {
@@ -57,9 +58,15 @@ class ImageSelectButton(ToggleButton, ToggleButtonBehavior):
                 'normal': 'F5F5F5'}
 
     def change_color(self):
+        """
+        Selected image on right sided panel must be recognized
+        """
         self.background_color = get_color_from_hex(self.selected[self.state])
 
     def select(self, *args, **kwargs):
+        """
+        Selected image on right sided panel should be main photo
+        """
         pictureviewer = self.parent.parent.parent.parent.parent
         pictureviewer.load_files(self.parent.path)
 
@@ -67,6 +74,9 @@ class ImageSelectButton(ToggleButton, ToggleButtonBehavior):
         pass
 
     def _do_press(self):
+        """
+        To handle button pressure on right sided panel
+        """
         super(ImageSelectButton, self)._do_press()
         buttons = ToggleButtonBehavior.get_widgets('images')
         for button in buttons:
@@ -91,12 +101,18 @@ class PictureViewer(GridLayout):
 
     def __init__(self, *args, **kwargs):
         self.filters = map(lambda x: "*.%s" % x, FILE_EXTENSIONS)
-        self.path = ""
-        if 'path' in kwargs:
-            self.path = kwargs.pop('path')
+        self.path = kwargs.pop('path')
         super(PictureViewer, self).__init__(*args, **kwargs)
 
+    def change_item_colors(self, *args, **kwargs):
+        print "???"
+        for item in self.file_chooser._items:
+            item.color_selected = get_color_from_hex('B3B3B3')
+
     def _browser_action(self, button, *args, **kwargs):
+        """
+        close and display browser panel action handled.
+        """
         non_display = True
         if button.direction == "left":
             button.direction = "right"
@@ -118,6 +134,9 @@ class PictureViewer(GridLayout):
                             step += 1
 
     def browser_action(self, button, *args, **kwargs):
+        """
+        close and display browser panel action trigger.
+        """
         if button.direction == "left":
             anim = Animation(width=0, d=.2, t='linear')
         else:
@@ -126,6 +145,9 @@ class PictureViewer(GridLayout):
         anim.start(self.file_chooser)
 
     def _tracker_action(self, button, *args, **kwargs):
+        """
+        close and display tracker panel action handled
+        """
         if button.direction == "left":
             button.direction = "right"
             button.text = "[font=assets/fontawesome-webfont.ttf][/font]"
@@ -134,6 +156,9 @@ class PictureViewer(GridLayout):
             button.text = "[font=assets/fontawesome-webfont.ttf][/font]"
 
     def tracker_action(self, button, *args, **kwargs):
+        """
+        close and display tracker panel action trigger
+        """
         if button.direction == "right":
             anim = Animation(width=0, d=.2, t='linear')
         else:
@@ -142,25 +167,36 @@ class PictureViewer(GridLayout):
         anim.start(self.list_view)
 
     def activate_buttons(self, *args, **kwargs):
+        """
+        Save and rotate buttons comes inactive must activated with selection.
+        """
         self.rotate_left.text = self.rotate_left.pre_text
         self.rotate_right.text = self.rotate_right.pre_text
         save_image = self.save_but.children[0]
         save_image.source = "assets/save_icon.png"
 
     def change_image_source(self, *args, **kwargs):
+        """
+        Selected image action main handler.
+        """
         selection = args[0]
 
         self.selectedimage.path = selection
         self.selectedimage.name = selection.rsplit("/", 1)[1]
         self.selectedimage.rotation = 0
         self.activate_buttons()
-        anim = Animation(width=self.photo.width, center_x=self.picture.image_source.center_x - 2, t='linear', duration=.3)
+        anim = Animation(width=self.photo.width, t='linear', duration=.3,
+            center_x=self.picture.image_source.center_x - 2)
         anim.start(self.picture.image_source)
 
     def load_files(self, selection):
+        """
+        Browsed photo siblings selection, not all but limited ones.
+        """
         try:
             file_dir = get_dir(selection)
             self.files = []
+            # Selected image action handler
             if os.path.isfile(selection):
                 if self.picture.image_source.source != selection:
                     image_source = self.picture.image_source.source
@@ -185,7 +221,7 @@ class PictureViewer(GridLayout):
                             width=self.photo.width, t='linear', duration=.3,
                             center_x = center_x - 2
                         )
-                        anim.bind(on_complete=self.activate_buttons)
+                        anim.fbind('on_complete', self.activate_buttons)
                         anim.start(self.picture.image_source)
                 else:
                     self.selectedimage.path = selection
@@ -198,6 +234,7 @@ class PictureViewer(GridLayout):
                     anim.bind(on_complete=self.activate_buttons)
                     anim.start(self.picture.image_source)
 
+            # Files filtered and collect.
             selected = {}
             for ext in FILE_EXTENSIONS:
                 files = glob("%s/*.%s" % (file_dir, ext))
@@ -218,11 +255,16 @@ class PictureViewer(GridLayout):
             )
             self.files = self.files[display_range[0]:display_range[1]]
             self.selected_index_onlist = self.files.index(selected)
-            # TODO: filechooser also should be moved with keyboard interactions
+            # Browser can trace viewed photo
+            for item in self.file_chooser._items:
+                item.color_selected = get_color_from_hex('B3B3B3')
+                if item.path == selection:
+                    item.parent.select_node(item)
         except IndexError:
             pass
 
     def select_source(self, *args):
+        """Selected photo action trigger"""
         try:
             selection = args[0][0]
             self.load_files(selection)
@@ -230,6 +272,7 @@ class PictureViewer(GridLayout):
             pass
 
     def picturesListed(self, row_index, item):
+        """Tracker panel list item handler."""
         return {
             'path': item.get('path', ''),
             'name': item.get('name', ''),
@@ -237,20 +280,25 @@ class PictureViewer(GridLayout):
             'is_selected': item.setdefault('is_selected', False)
         }
 
-    def reload_images(self):
+    def reload_photos(self):
+        """
+        On photo save, rotation mut be displayed to do reloading
+        """
         for pic in self.list_view.children[0].children[0].children:
             im = pic.image_source
             im.reload()
         im = self.picture.image_source
-        im.reload()
 
-    def save_img(self, *args, **kwargs):
+    def _save_photo(self, *args, **kwargs):
+        """
+        Saving procedure handler.
+        """
         rotation_dct = {
             90: Image.ROTATE_90,
             180: Image.ROTATE_180,
             270: Image.ROTATE_270,
         }
-        rotation = self.norm_picture(self.photo.rotation, None, None)
+        rotation = self.norm_photo(self.photo.rotation, None, None)
         rotation = int(str(rotation).rsplit(".", 1)[0])
         image_path = self.picture.image_source.source
         if rotation > 0 and rotation in rotation_dct:
@@ -259,18 +307,24 @@ class PictureViewer(GridLayout):
             im.save(image_path, quality = 95)
             Cache.remove("kv.loader", image_path)
         self.load_files(image_path)
-        self.reload_images()
+        self.reload_photos()
 
-    def save_anim(self):
+    def save_photo(self):
+        """
+        Saving procedure trigger.
+        """
         if self.picture.image_source.source and self.picture.image_name.text:
             anim = Animation(
                 width=0, t='linear', duration=.3,
                 center_x=self.picture.image_source.center_x - 2
             )
-            anim.bind(on_complete=self.save_img)
+            anim.bind(on_complete=self._save_photo)
             anim.start(self.picture.image_source)
 
-    def norm_picture(self, angle, anim, scatter):
+    def norm_photo(self, angle, anim, scatter):
+        """
+        Normalized image rotation
+        """
         rotations = [-270, -180, -90, 0, 90, 180, 270]
         find_index = map(lambda x: abs(int(self.photo.rotation) - x), rotations)
         self.selectedimage.rotation = rotations[
@@ -278,15 +332,21 @@ class PictureViewer(GridLayout):
         return self.photo.rotation
 
     def rotate(self, angle):
+        """
+        Rotation handler
+        """
         if self.picture.image_source.source and self.picture.image_name.text:
             rotation = self.selectedimage.rotation + angle
             anim = Animation(
                 rotation=rotation,
                 t='linear', duration=.2)
-            anim.fbind('on_complete', self.norm_picture, angle)
+            anim.fbind('on_complete', self.norm_photo, angle)
             anim.start(self.photo)
 
     def key_pressed(self, *args, **kwargs):
+        """
+        Key press action handler.
+        """
         try:
             if self.files:
                 code = args[1:3]
@@ -296,12 +356,19 @@ class PictureViewer(GridLayout):
                         self.selected_index_onlist + 1, len(self.files) - 1)
                 elif code in BACKWARD_KEY_CODES:
                     next_index = max(self.selected_index_onlist - 1, 0)
+                elif code in FULLSCREEN_KEY_CODES:
+                    pass
+                    # TODO: fullscreen
+                    # Window.toggle_fullscreen()
                 if next_index != self.selected_index_onlist:
                     self.load_files(self.files[next_index]['path'])
         except IndexError:
             pass
 
     def set_path(self, *args):
+        """
+        dropping file trigger all action.
+        """
         try:
             selected = get_dir(args[1])
             if os.path.isdir(selected):
@@ -316,9 +383,7 @@ class PictureViewer(GridLayout):
 class PictureViewerApp(App):
     def __init__(self, **kwargs):
         super(PictureViewerApp, self).__init__(**kwargs)
-        self.path = ""
-        if 'path' in kwargs:
-            self.path = get_dir(kwargs.get('path'))
+        self.path = get_dir(kwargs.get('path'))
         Builder.load_file('assets/PictureViewer.kv')
         self.title = 'Picture Viewer'
         self.icon = 'assets/pictureViewer.icns'
@@ -326,6 +391,7 @@ class PictureViewerApp(App):
     def build(self):
         pictureviewer = PictureViewer(path=self.path)
         image_source = pictureviewer.picture.image_source.source
+        # Save button action handler on start.
         if image_source and pictureviewer.picture.image_name.text:
             pass
         else:
@@ -337,7 +403,8 @@ class PictureViewerApp(App):
 
 if __name__ == '__main__':
     import sys
-    path = "/"
+    path = "/Users/denizci/Dropbox/"
+    # Tried to take selected photo on start.
     if len(sys.argv) > 1:
         path = sys.argv[1]
     Window.size = 1200, 700

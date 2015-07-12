@@ -78,6 +78,7 @@
     save_but: save_but
     rotate_left: rotate_left
     rotate_right: rotate_right
+    tracker_button: tracker_button
 
     FileChooserListView:
         id: file_chooser
@@ -86,9 +87,12 @@
         dirselect: True
         show_hidden: True
         filters: root.filters
-        path: "/"
+        path: root.path
         color: get_color_from_hex('000000')
         on_submit: root.select_source(self.selection)
+        on_entries_cleared: root.change_item_colors()
+        on_entry_added: root.change_item_colors()
+        on_subentry_to_entry: root.change_item_colors()
 
     Button:
         text: "[font=assets/fontawesome-webfont.ttf][/font]"
@@ -164,7 +168,7 @@
                 size_hint: None, 1
                 width: '40px'
                 height: '25px'
-                on_press: root.save_anim()
+                on_press: root.save_photo()
                 Image:
                     size_hint: 1,1
                     width: self.parent.width
@@ -182,8 +186,9 @@
                 on_press: root.rotate(-90)
 
     Button:
-        text: "[font=assets/fontawesome-webfont.ttf][/font]"
-        direction: "right"
+        id: tracker_button
+        text: "[font=assets/fontawesome-webfont.ttf][/font]"
+        direction: "left"
         size_hint: None, 1
         width: '15px'
         on_press: root.tracker_action(self)
@@ -191,6 +196,6 @@
     ListView:
         id: list_view
         size_hint: None, 1
-        width: '150px'
+        width: '0'
         scrolling: True
         adapter: ListAdapter(data=root.files, cls=Factory.Pictures, args_converter=root.picturesListed, selection_mode='single')
