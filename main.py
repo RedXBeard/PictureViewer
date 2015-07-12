@@ -96,14 +96,65 @@ class PictureViewer(GridLayout):
             self.path = kwargs.pop('path')
         super(PictureViewer, self).__init__(*args, **kwargs)
 
+    def _browser_action(self, button, *args, **kwargs):
+        non_display = True
+        if button.direction == "left":
+            button.direction = "right"
+            button.text = "[font=assets/fontawesome-webfont.ttf][/font]"
+        else:
+            non_display = False
+            button.direction = "left"
+            button.text = "[font=assets/fontawesome-webfont.ttf][/font]"
+
+        for widget in self.file_chooser.layout.children[0].children:
+            if str(widget).find("BoxLayout") != -1:
+                step = 0
+                for wwidget in widget.children:
+                    if str(wwidget).find("Label") != -1:
+                        if non_display:
+                            wwidget.text = ""
+                        else:
+                            wwidget.text = step==0 and 'Size' or 'Name'
+                            step += 1
+
+    def browser_action(self, button, *args, **kwargs):
+        if button.direction == "left":
+            anim = Animation(width=0, d=.2, t='linear')
+        else:
+            anim = Animation(width=250, d=.2, t='linear')
+        anim.fbind('on_complete', self._browser_action, button)
+        anim.start(self.file_chooser)
+
+    def _tracker_action(self, button, *args, **kwargs):
+        if button.direction == "left":
+            button.direction = "right"
+            button.text = "[font=assets/fontawesome-webfont.ttf][/font]"
+        else:
+            button.direction = "left"
+            button.text = "[font=assets/fontawesome-webfont.ttf][/font]"
+
+    def tracker_action(self, button, *args, **kwargs):
+        if button.direction == "right":
+            anim = Animation(width=0, d=.2, t='linear')
+        else:
+            anim = Animation(width=150, d=.2, t='linear')
+        anim.fbind('on_complete', self._tracker_action, button)
+        anim.start(self.list_view)
+
+    def activate_buttons(self, *args, **kwargs):
+        self.rotate_left.text = self.rotate_left.pre_text
+        self.rotate_right.text = self.rotate_right.pre_text
+        save_image = self.save_but.children[0]
+        save_image.source = "assets/save_icon.png"
+
     def change_image_source(self, *args, **kwargs):
         selection = args[0]
 
         self.selectedimage.path = selection
         self.selectedimage.name = selection.rsplit("/", 1)[1]
         self.selectedimage.rotation = 0
-
-        anim = Animation(width=self.photo.width, t='linear', duration=.2)
+        self.activate_buttons()
+        anim = Animation(width=self.photo.width, center_x=self.picture.image_source.center_x - 2, t='linear', duration=.3)
         anim.start(self.picture.image_source)
 
     def load_files(self, selection):
@@ -112,25 +163,39 @@ class PictureViewer(GridLayout):
             self.files = []
             if os.path.isfile(selection):
                 if self.picture.image_source.source != selection:
-                    if self.picture.image_source.source and self.picture.image_name.text:
-                        anim = Animation(width=0, t='linear', duration=.2)
-                        anim.fbind('on_complete', self.change_image_source, selection)
+                    image_source = self.picture.image_source.source
+                    if image_source and self.picture.image_name.text:
+                        anim = Animation(
+                            width=0, t='linear', duration=.3,
+                            center_x=self.picture.image_source.center_x + 2
+                        )
+                        anim.fbind(
+                            'on_complete', self.change_image_source, selection
+                        )
                         anim.start(self.picture.image_source)
                     else:
-                        self.picture.image_source.width = 0
+                        center_x = self.picture.image_source.center_x
 
+                        self.picture.image_source.width = 0
                         self.selectedimage.path = selection
                         self.selectedimage.name = selection.rsplit("/", 1)[1]
                         self.selectedimage.rotation = 0
 
-                        anim = Animation(width=self.photo.width, t='linear', duration=.2)
+                        anim = Animation(
+                            width=self.photo.width, t='linear', duration=.3,
+                            center_x = center_x - 2
+                        )
+                        anim.bind(on_complete=self.activate_buttons)
                         anim.start(self.picture.image_source)
                 else:
                     self.selectedimage.path = selection
                     self.selectedimage.name = selection.rsplit("/", 1)[1]
                     self.selectedimage.rotation = 0
-
-                    anim = Animation(width=self.photo.width, t='out_back', duration=1)
+                    anim = Animation(
+                        width=self.photo.width, t='linear', duration=.3,
+                        center_x=self.picture.image_source.center_x + 2
+                    )
+                    anim.bind(on_complete=self.activate_buttons)
                     anim.start(self.picture.image_source)
 
             selected = {}
@@ -198,7 +263,10 @@ class PictureViewer(GridLayout):
 
     def save_anim(self):
         if self.picture.image_source.source and self.picture.image_name.text:
-            anim = Animation(width=0, t='in_back', duration=1)
+            anim = Animation(
+                width=0, t='linear', duration=.3,
+                center_x=self.picture.image_source.center_x - 2
+            )
             anim.bind(on_complete=self.save_img)
             anim.start(self.picture.image_source)
 
@@ -211,8 +279,9 @@ class PictureViewer(GridLayout):
 
     def rotate(self, angle):
         if self.picture.image_source.source and self.picture.image_name.text:
+            rotation = self.selectedimage.rotation + angle
             anim = Animation(
-                rotation=self.selectedimage.rotation + angle,
+                rotation=rotation,
                 t='linear', duration=.2)
             anim.fbind('on_complete', self.norm_picture, angle)
             anim.start(self.photo)
@@ -256,6 +325,12 @@ class PictureViewerApp(App):
 
     def build(self):
         pictureviewer = PictureViewer(path=self.path)
+        image_source = pictureviewer.picture.image_source.source
+        if image_source and pictureviewer.picture.image_name.text:
+            pass
+        else:
+            save_image = pictureviewer.save_but.children[0]
+            save_image.source = "assets/trans.png"
         Window.bind(on_key_down=pictureviewer.key_pressed)
         Window.bind(on_dropfile=pictureviewer.set_path)
         return pictureviewer

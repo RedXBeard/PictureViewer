@@ -68,14 +68,16 @@
             pos: self.pos
             size: self.size
 
-    columns: 3
+    columns: 4
     rows: 1
-    spacing: '5px', '5px'
 
     picture: picture
     photo: photo
     file_chooser: file_chooser
     list_view: list_view
+    save_but: save_but
+    rotate_left: rotate_left
+    rotate_right: rotate_right
 
     FileChooserListView:
         id: file_chooser
@@ -84,9 +86,16 @@
         dirselect: True
         show_hidden: True
         filters: root.filters
-        path: "/"
+        path: "/Users/denizci/Dropbox/"
         color: get_color_from_hex('000000')
         on_submit: root.select_source(self.selection)
+
+    Button:
+        text: "[font=assets/fontawesome-webfont.ttf][/font]"
+        direction: "left"
+        size_hint: None, 1
+        width: '15px'
+        on_press: root.browser_action(self)
 
     GridLayout:
         id: picture
@@ -110,7 +119,7 @@
             height: self.parent.height - 60
             AsyncImage:
                 id: image_source
-                size_hint: 1,1
+                size_hint: 1, 1
                 width: self.parent.width
                 height: self.parent.height - 10
                 source: root.selectedimage.path or "assets/pictureViewer.png"
@@ -142,14 +151,16 @@
             spacing: 10
             padding: self.width/2 - 65, 0, self.width/2 - 65, 0
             Button:
-                text: "[font=assets/fontawesome-webfont.ttf][/font]"
+                id: rotate_left
+                text: ""
+                pre_text: "[font=assets/fontawesome-webfont.ttf][/font]"
                 size_hint: None, 1
                 width: '35px'
                 height: '25px'
                 on_press: root.rotate(90)
 
             Button:
-                text: ""
+                id: save_but
                 size_hint: None, 1
                 width: '40px'
                 height: '25px'
@@ -162,11 +173,20 @@
                     source: "assets/save_icon.png"
 
             Button:
-                text: "[font=assets/fontawesome-webfont.ttf][/font]"
+                id: rotate_right
+                text: ""
+                pre_text: "[font=assets/fontawesome-webfont.ttf][/font]"
                 size_hint: None, 1
                 width: '35px'
                 height: '25px'
                 on_press: root.rotate(-90)
+
+    Button:
+        text: "[font=assets/fontawesome-webfont.ttf][/font]"
+        direction: "right"
+        size_hint: None, 1
+        width: '15px'
+        on_press: root.tracker_action(self)
 
     ListView:
         id: list_view
