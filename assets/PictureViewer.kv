@@ -79,6 +79,7 @@
     rotate_left: rotate_left
     rotate_right: rotate_right
     tracker_button: tracker_button
+    info: info
 
     FileChooserListView:
         id: file_chooser
@@ -104,11 +105,14 @@
     GridLayout:
         id: picture
         columns: 1
-        rows: 3
+        rows: 4
         spacing: '0'
         image_name: image_name
         image_source: image_source
         photo: photo
+
+        Label:
+            id: info
 
         Scatter:
             id: photo

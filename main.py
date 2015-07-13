@@ -3,6 +3,8 @@
 __version__ = '1.0.0'
 
 import os
+import webbrowser
+from urllib2 import urlopen
 from PIL import Image
 from glob import glob
 from kivy.app import App
@@ -16,6 +18,10 @@ from kivy.properties import (
     StringProperty, BooleanProperty, ObjectProperty,
     ListProperty, NumericProperty
 )
+from kivy.clock import Clock
+from kivy.uix.label import Label
+from kivy.uix.button import Button
+from kivy.uix.popup import Popup
 from kivy.cache import Cache
 from kivy.adapters.listadapter import ListAdapter
 from kivy.factory import Factory
@@ -51,6 +57,9 @@ DEFAULT_FONT = "FiraSans"
 def get_dir(path):
     file_dir = os.path.dirname(path)
     return file_dir
+
+def open_page(self, *args):
+    webbrowser.open(args[0])
 
 
 class ImageSelectButton(ToggleButton, ToggleButtonBehavior):
@@ -103,6 +112,20 @@ class PictureViewer(GridLayout):
         self.filters = map(lambda x: "*.%s" % x, FILE_EXTENSIONS)
         self.path = kwargs.pop('path')
         super(PictureViewer, self).__init__(*args, **kwargs)
+        self.check_update()
+
+    def check_update(self):
+        resp = urlopen("https://github.com/RedXBeard/PictureViewer/releases/latest")
+        version_text = "".join(resp.url.rsplit("/", 1)[1].split("."))
+        if not version_text.isdigit():
+            current_version = 0
+        else:
+            current_version = int(version_text)
+
+        if current_version > int("".join(__version__.split('.'))):
+            self.info.text="[color=FF4545]Newer Version Released please check[/color] [color=3148F5][i][ref=https://github.com/RedXBeard/PictureViewer]PictureViewer[/ref][/i][/color]"
+            self.info.bind(on_ref_press=open_page)
+        Clock.schedule_once(lambda dt: self.check_update(), 3600)
 
     def change_item_colors(self, *args, **kwargs):
         for item in self.file_chooser._items:
