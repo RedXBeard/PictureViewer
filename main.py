@@ -184,7 +184,7 @@ class PictureViewer(GridLayout):
         self.selectedimage.name = selection.rsplit("/", 1)[1]
         self.selectedimage.rotation = 0
         self.activate_buttons()
-        anim = Animation(width=self.photo.width, t='linear', duration=.3,
+        anim = Animation(width=self.photo.width, t='linear', duration=.2,
             center_x=self.picture.image_source.center_x - 2)
         anim.start(self.picture.image_source)
 
@@ -201,7 +201,7 @@ class PictureViewer(GridLayout):
                     image_source = self.picture.image_source.source
                     if image_source and self.picture.image_name.text:
                         anim = Animation(
-                            width=0, t='linear', duration=.3,
+                            width=0, t='linear', duration=.2,
                             center_x=self.picture.image_source.center_x + 2
                         )
                         anim.fbind(
@@ -217,7 +217,7 @@ class PictureViewer(GridLayout):
                         self.selectedimage.rotation = 0
 
                         anim = Animation(
-                            width=self.photo.width, t='linear', duration=.3,
+                            width=self.photo.width, t='linear', duration=.2,
                             center_x = center_x - 2
                         )
                         anim.fbind('on_complete', self.activate_buttons)
@@ -227,7 +227,7 @@ class PictureViewer(GridLayout):
                     self.selectedimage.name = selection.rsplit("/", 1)[1]
                     self.selectedimage.rotation = 0
                     anim = Animation(
-                        width=self.photo.width, t='linear', duration=.3,
+                        width=self.photo.width, t='linear', duration=.2,
                         center_x=self.picture.image_source.center_x + 2
                     )
                     anim.bind(on_complete=self.activate_buttons)
@@ -247,6 +247,7 @@ class PictureViewer(GridLayout):
                     self.files.append(tmp)
                     if tmp['is_selected']:
                         selected = tmp
+            self.files = sorted(self.files, key=lambda x: x.get('path'))
             self.selected_index_onlist = self.files.index(selected)
             display_range = (
                 max(self.selected_index_onlist - 4, 0),
