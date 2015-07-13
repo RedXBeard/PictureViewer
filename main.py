@@ -287,6 +287,7 @@ class PictureViewer(GridLayout):
             im = pic.image_source
             im.reload()
         im = self.picture.image_source
+        im.reload()
 
     def _save_photo(self, *args, **kwargs):
         """
