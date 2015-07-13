@@ -16,5 +16,8 @@ To download <code>.dmg</code> this will help; [MacOSX file](https://app.box.com/
 - [x] Close browser and tracker panels.
 - [x] Browser and tracker panel sort order must be even.
 - [x] Version checker on start-up.
+- [ ] More image types must be filtered.
+- [ ] Version checker first start should be triggered not called directly.
+- [ ] Notify last photo on list is viewed. 
 - [ ] Fullscreen.
 - [ ] Scale on fullscreen.
