@@ -7,11 +7,17 @@ The fastest and easiest way to glance your photos pictures images on macOSX, wit
 ##### 1.0.0
 - First release.
 
+### Installation
+To download <code>.dmg</code> this will help; [MacOSX file](https://app.box.com/s/1xf7imsfxouas8736cbkzkruxct8j50b)
+
 ### TODO's
 - [x] Browse panel should also trace displayed image.
 - [x] Changing image switcher animation to getting smaller from center.
 - [x] Close browser and tracker panels.
 - [x] Browser and tracker panel sort order must be even.
 - [x] Version checker on start-up.
+- [ ] More image types must be filtered.
+- [ ] Version checker first start should be triggered not called directly.
+- [ ] Notify last photo on list is viewed. 
 - [ ] Fullscreen.
 - [ ] Scale on fullscreen.
